@@ -47,34 +47,34 @@ neon.ts             Neon branch/services policy (managed by `neon deploy`)
 
 ## Local development
 
-Prerequisites: Python 3.12, Node 22, Docker (for PostgreSQL).
+Prerequisite: Docker with the Compose plugin. The Docker workflow does not
+require Python or Node.js installed on the host.
 
 ```bash
-# 1. Start PostgreSQL
-docker compose up -d postgres
-
-# 2. Backend
-cd backend
-python -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev]"     # Windows
-# source .venv/bin/activate && pip install -e ".[dev]"  # macOS/Linux
-alembic upgrade head
-uvicorn app.main:app --reload --port 8000
+# Start the frontend, API, and PostgreSQL
+docker compose up --build
 ```
 
-Or run both services in Docker: `docker compose up --build`. The API is at
-<http://localhost:8000>, docs at `/docs`, liveness at `/health`, DB readiness at
-`/health/ready`.
+On a fresh database, apply the schema migrations in another terminal after
+the services have started:
 
 ```bash
-# 3. Frontend
-cd frontend
-npm install
-npm run dev            # http://localhost:5173, proxies /api to :8000
+docker compose exec api alembic upgrade head
 ```
 
-Copy `.env.example` to `.env` for the API and `frontend/.env.example` to
-`frontend/.env.local` for the web app. Never commit real secrets.
+Then open:
+
+- Frontend: <http://localhost:5173>
+- Backend API: <http://localhost:8000>
+- API documentation: <http://localhost:8000/docs>
+
+Vite forwards browser `/api` and `/health` requests to the `api` Compose
+service. The backend reloads on code changes, and the frontend hot reloads
+through its mounted source directory.
+
+Stop the containers with `docker compose down`. This keeps the persistent
+PostgreSQL data volume; do not add `-v` if you want to retain the database.
+The `postgres_data` volume is also preserved when containers are rebuilt.
 
 ## Environment
 
@@ -89,7 +89,7 @@ Copy `.env.example` to `.env` for the API and `frontend/.env.example` to
 | `BOOKING_HOLD_MINUTES` | unpaid hold window (default 30) |
 | `NID_ENCRYPTION_KEY`, `NID_HASH_KEY` | operator NID encryption / duplicate hash (T2) |
 | `STORAGE_*` | S3-compatible buckets for photos and private documents (T2) |
-| `VITE_API_URL` | API origin for the web app |
+| `VITE_API_URL` | Optional API origin; Docker Compose uses relative requests through the Vite proxy |
 
 ## Neon
 
