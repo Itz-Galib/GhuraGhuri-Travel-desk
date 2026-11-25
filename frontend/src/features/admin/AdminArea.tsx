@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { API_PREFIX, apiRequest, getAccessToken, jsonBody } from '../../lib/api/client'
+import { API_BASE, API_PREFIX, apiRequest, getAccessToken, jsonBody } from '../../lib/api/client'
 import { formatBdt } from '../tours/HomePage'
 import { AdminOperatorsPanel } from './AdminOperatorsPanel'
 
@@ -73,11 +73,13 @@ export function AdminArea() {
   }
 
   async function downloadCsv() {
-    const base = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
     const token = getAccessToken()
-    const res = await fetch(`${base}${API_PREFIX}/admin/bookings?format=csv`, {
+    const res = await fetch(`${API_BASE}${API_PREFIX}/admin/bookings?format=csv`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
+    if (!res.ok) {
+      throw new Error(`Failed to export bookings (${res.status})`)
+    }
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

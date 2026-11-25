@@ -5,7 +5,7 @@
  * HttpOnly cookie, so refresh requests must send `credentials: 'include'`.
  */
 
-const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+export const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 export const API_PREFIX = '/api/v1'
 
 export interface ApiErrorBody {
